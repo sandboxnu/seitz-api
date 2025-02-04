@@ -1,5 +1,5 @@
 import mongoose, { UpdateWriteOpResult } from "mongoose";
-import { User, Battery } from "../models";
+import { User, Battery, CustomizedBattery } from "../models";
 import HttpError from "../types/errors";
 import { APIResponse } from "../util/handlers";
 import * as crypto from "crypto";
@@ -8,6 +8,7 @@ import type {
   CreateBatteryStage,
   CreateOption,
   IBattery,
+  ICustomizedBattery,
   IUser,
 } from "@seitz/shared";
 
@@ -123,3 +124,26 @@ function parseOptions(s: any): CreateOption[] {
     return acc;
   }, []);
 }
+
+export const updateAdminVisibility = async (
+  batteryId: string,
+  visibility: string
+): APIResponse<ICustomizedBattery> => {
+  if (visibility !== "on" && visibility !== "off") {
+    throw new HttpError(400, "Invalid visibility must be 'on' or 'off'");
+  }
+
+  const visibility_bool = visibility === "on"; // hardcoded - could be improved
+
+  const battery = await CustomizedBattery.findOneAndUpdate(
+    { _id: batteryId },
+    { isVisibleToNonAdmins: visibility_bool },
+    { new: true }
+  );
+
+  if (!battery) {
+    throw new HttpError(404, `Battery not found ${batteryId}`);
+  }
+
+  return [200, battery];
+};
