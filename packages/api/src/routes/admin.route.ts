@@ -42,4 +42,16 @@ router.delete(
   route((req) => adminService.removeUserAsAdmin(req.params.id))
 );
 
+router.put(
+  "/battery/:id/stage/:stageId/visibility/:status",
+  isAdmin,
+  route((req) =>
+    adminService.updateStageVisibility(
+      req.params.id,
+      req.params.stageId,
+      req.params.status
+    )
+  )
+);
+
 export default router;
