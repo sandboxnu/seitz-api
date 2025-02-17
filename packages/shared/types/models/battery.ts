@@ -85,6 +85,7 @@ export interface CreateCustomizedBattery {
   battery: Types.ObjectId;
   name: string;
   values: CreateOptionValue[];
+  isVisibleToNonAdmins: boolean;
 }
 
 export interface ICustomizedBattery extends Required<CreateCustomizedBattery> {

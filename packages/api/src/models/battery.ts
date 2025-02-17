@@ -90,6 +90,7 @@ export const customizedBatterySchema = new Schema<ICustomizedBattery>({
   battery: { type: Schema.Types.ObjectId, ref: "Battery", required: true },
   name: { type: String, required: true },
   values: [optionValueSchema],
+  isVisibleToNonAdmins: { type: Boolean, default: true },
 });
 
 export const CustomizedBattery = model<ICustomizedBattery>(
