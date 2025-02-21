@@ -7,6 +7,8 @@ import adminAPI from "@/api/admin";
 import AppButton from "@/components/ui/AppButton.vue";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { ElButton, ElCard, ElNotification } from "element-plus";
+import { Role } from "@seitz/shared";
+import RolesDropdown from "./components/RolesDropdown.vue";
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -23,7 +25,8 @@ const { data: allUsers, isLoading: isUsersLoading } = useQuery(
   adminAPI.getAllUsers
 );
 const addAdmin = useMutation(
-  (userId: string) => adminAPI.addUserAsAdmin(userId),
+  // TODO: Change this to use the new ROLE variable here ↓↓↓↓
+  (userId: string) => adminAPI.assignAdminRole(userId, Role.SuperAdmin),
   {
     onSuccess: () => {
       queryClient.invalidateQueries(["admins"]);
@@ -113,8 +116,11 @@ const filteredUsers = computed(() => {
     user.email.toLowerCase().includes(searchQuery.value.toLowerCase())
   );
 });
-
-if (!authStore.currentUser?.isAdmin) {
+// TODO: Should all admins be able to access this page?
+if (
+  !authStore.currentUser?.role ||
+  authStore.currentUser.role === Role.BasicUser
+) {
   router.push("/");
 }
 </script>
@@ -153,7 +159,7 @@ if (!authStore.currentUser?.isAdmin) {
         <ElInput
           v-model="searchQuery"
           placeholder="Search by email"
-          class="w-full"
+          class="w-full rounded-full"
         />
       </div>
 
@@ -164,27 +170,73 @@ if (!authStore.currentUser?.isAdmin) {
         >
           <tbody>
             <tr v-for="user in filteredUsers" :key="user._id">
-              <td class="py-2 px-4 border-b flex">
-                {{ user.email }}
-                <ElButton
-                  :text="true"
-                  type="primary"
-                  :class="{
-                    'ml-auto hover:bg-red-100 text-red-600 underline':
-                      !usersToAdd.includes(user._id),
-                    'ml-auto hover:bg-green-200 bg-green-100 text-green-600 underline':
-                      usersToAdd.includes(user._id),
-                  }"
-                  :disabled="isUserAdmin(user._id)"
-                  size="small"
-                  @click="handleAddAdmin(user._id)"
-                  >{{
-                    usersToAdd.includes(user._id) ||
-                    adminUsers.find((admin: any) => admin._id === user._id)
-                      ? "Added"
-                      : "Add"
-                  }}
-                </ElButton>
+              <td class="py-2 px-4 border-b flex items-center justify-evenly">
+                <!-- PLACEHOLDER NAME -->
+                <div class="mr-auto font-bold">First Last</div>
+                <div>{{ user.email }}</div>
+                <div class="ml-auto">
+                  <ElButton
+                    :text="true"
+                    type="primary"
+                    :class="{
+                      'ml-2 hover:bg-red-100 text-red-600 underline':
+                        !usersToAdd.includes(user._id),
+                      'ml-2 hover:bg-green-200 bg-green-100 text-green-600 underline':
+                        usersToAdd.includes(user._id),
+                    }"
+                    :disabled="isUserAdmin(user._id)"
+                    size="small"
+                    style="width: 60px"
+                    @click="handleAddAdmin(user._id)"
+                    >{{
+                      usersToAdd.includes(user._id) ||
+                      adminUsers.find((admin: any) => admin._id === user._id)
+                        ? "Added"
+                        : "Add"
+                    }}
+                  </ElButton>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p v-else-if="!isUsersLoading && filteredUsers.length === 0">
+          No users found.
+        </p>
+        <p v-else>Loading...</p>
+      </div>
+
+      <hr class="border-black w-11/12 mx-auto" />
+      <div
+        class="ml-5 text-black text-base font-bold text-left py-2 whitespace-nowrap"
+      >
+        Selected Administrators
+      </div>
+
+      <div class="m-4 mb-8 h-32 overflow-auto">
+        <!-- PLACEHOLDER TABLE, NEED TO USE A NEW LIST WITH SELECTED ADMINS-->
+        <table
+          v-if="!isUsersLoading && filteredUsers.length > 0"
+          class="w-full table-auto border-collapse"
+        >
+          <tbody>
+            <tr v-for="user in filteredUsers" :key="user._id">
+              <td class="py-2 px-4 border-b flex items-center justify-evenly">
+                <!-- PLACEHOLDER NAME -->
+                <div class="mr-auto font-bold">First Last</div>
+                <div class="ml-auto">
+                  <RolesDropdown :user="user" />
+                </div>
+                <!-- REMOVE BUTTON, NEED TO IMPLEMENT @CLICK TO REMOVE FROM usersToAdd -->
+                <div class="ml-auto">
+                  <ElButton
+                    :text="true"
+                    type="danger"
+                    class="hover:bg-red-100 text-red-600 underline"
+                    size="small"
+                    >Remove</ElButton
+                  >
+                </div>
               </td>
             </tr>
           </tbody>
@@ -201,24 +253,21 @@ if (!authStore.currentUser?.isAdmin) {
           >Cancel</el-button
         >
         <AppButton
-          class="ml-auto"
+          class="ml-auto bg-black text-white"
           type="primary"
           :disabled="usersToAdd.length === 0"
           @click="confirmAddAdmin"
         >
-          Add
+          Add Selected
         </AppButton>
       </div>
     </el-dialog>
 
     <ElCard class="rounded-xl shadow-md m-10">
       <div class="m-4">
-        <div class="flex">
+        <div class="flex justify-between items-center">
           <h2 class="font-bold text-lg mb-4">Administrators</h2>
-          <AppButton
-            class="ml-auto"
-            type="primary"
-            @click="addAdminDialogVisible = true"
+          <AppButton type="primary" @click="addAdminDialogVisible = true"
             >Add Administrator</AppButton
           >
         </div>
@@ -228,18 +277,36 @@ if (!authStore.currentUser?.isAdmin) {
         >
           <thead>
             <tr>
-              <th class="text-black text-left py-2 px-4 border-b-2">Email</th>
+              <!-- PLACEHOLDER FOR FIRST NAME -->
+              <th class="text-black text-center py-2 px-2 border-b-2">
+                First Name
+              </th>
+              <!-- PLACEHOLDER FOR LAST NAME -->
+              <th class="text-black text-center py-2 px-2 border-b-2">
+                Last Name
+              </th>
+              <th class="text-black text-left py-2 px-12 border-b-2">Email</th>
+              <th class="text-black text-left py-2 px-4 border-b-2">
+                Admin Type
+              </th>
+              <th class="text-black text-right py-2 px-4 border-b-2"></th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="user in adminUsers" :key="user._id">
-              <td class="py-2 px-4 border-b flex">
+              <td class="py-2 px-4 border-b text-center">First</td>
+              <td class="py-2 px-4 border-b text-center">Last</td>
+              <td class="py-2 px-12 border-b">
                 {{ user.email }}
+              </td>
+              <td class="py-2 px-4 border-b text-left">
+                <RolesDropdown :user="user" />
+              </td>
+              <td class="py-2 px-4 border-b text-right">
                 <ElButton
                   :text="true"
                   type="danger"
-                  class="ml-auto hover:bg-red-100 text-red-600 underline"
-                  size="small"
+                  class="hover:bg-red-100 text-red-600 underline"
                   @click="handleRemoveAdmin(user.email, user._id)"
                   >Remove</ElButton
                 >

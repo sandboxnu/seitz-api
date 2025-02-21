@@ -1,12 +1,17 @@
 import { Schema, model } from "mongoose";
 import { ENCRYPTION_CONSTANTS as EC } from "../util/constants";
 import bcrypt from "bcrypt";
-import type { IUser } from "@seitz/shared";
+import { Role, type IUser } from "@seitz/shared";
 
 const userSchema = new Schema<IUser>({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  isAdmin: { type: Boolean, required: true, default: false },
+  role: {
+    type: String,
+    enum: Object.values(Role),
+    required: true,
+    default: Role.BasicUser,
+  },
   studies: [{ type: Schema.Types.ObjectId, ref: "Study" }],
   token: { type: String },
   verified: { type: Boolean, required: true, default: false },

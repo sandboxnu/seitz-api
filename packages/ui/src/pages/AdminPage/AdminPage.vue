@@ -4,12 +4,17 @@ import { useAuthStore } from "@/stores/auth";
 import AdminTaskLibrary from "./components/AdminTaskLibrary.vue";
 import BatteryEditForm from "./components/BatteryEditForm.vue";
 import { useBatteryEditingStore } from "../../stores/admin";
+import { Role } from "@seitz/shared";
 
 const router = useRouter();
 const authStore = useAuthStore();
 const batteryEditingStore = useBatteryEditingStore();
 
-if (!authStore.currentUser?.isAdmin) {
+// TODO: Should all admins be able to access this page?
+if (
+  !authStore.currentUser?.role ||
+  authStore.currentUser.role === Role.BasicUser
+) {
   router.push("/");
 }
 </script>
