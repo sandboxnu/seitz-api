@@ -28,6 +28,7 @@ const batteryStageSchema = new Schema<IBatteryStage>({
   type: { type: String, required: true },
   stageLabel: String,
   options: optionGroupSchema,
+  isVisibleToNonAdmins: { type: Boolean, default: true },
 });
 
 const optArray = optionGroupSchema.path<Schema.Types.DocumentArray>("options");

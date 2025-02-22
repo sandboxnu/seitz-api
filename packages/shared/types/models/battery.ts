@@ -53,6 +53,7 @@ export interface CreateBatteryStage {
   type: string;
   stageLabel: string;
   options: CreateOptionGroup;
+  isVisibleToNonAdmins: boolean;
 }
 
 export interface IBatteryStage extends Required<CreateBatteryStage> {
