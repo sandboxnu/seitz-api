@@ -42,7 +42,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // Routes
-app.use("/admin/", adminRoutes);
+app.use("/admin", adminRoutes);
 app.use("/example/", exampleRoutes);
 app.use("/studies/", studiesRoutes);
 app.use("/tasks/", tasksRoutes);

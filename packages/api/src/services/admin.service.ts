@@ -1,5 +1,5 @@
 import mongoose, { UpdateWriteOpResult } from "mongoose";
-import { User, Battery } from "../models";
+import { User, Battery, CustomizedBattery } from "../models";
 import HttpError from "../types/errors";
 import { APIResponse } from "../util/handlers";
 import * as crypto from "crypto";
@@ -8,8 +8,10 @@ import type {
   CreateBatteryStage,
   CreateOption,
   IBattery,
+  ICustomizedBattery,
   IUser,
 } from "@seitz/shared";
+import { parseVisibility } from "@/util/validation.utils";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -123,3 +125,22 @@ function parseOptions(s: any): CreateOption[] {
     return acc;
   }, []);
 }
+
+export const updateAdminVisibility = async (
+  batteryId: string,
+  visibility: string
+): APIResponse<ICustomizedBattery> => {
+  const isVisibleToNonAdmins = parseVisibility(visibility);
+
+  const battery = await CustomizedBattery.findOneAndUpdate(
+    { _id: batteryId },
+    { isVisibleToNonAdmins: isVisibleToNonAdmins },
+    { new: true }
+  );
+
+  if (!battery) {
+    throw new HttpError(404, `Battery not found with ID: ${batteryId}`);
+  }
+
+  return [200, battery];
+};
