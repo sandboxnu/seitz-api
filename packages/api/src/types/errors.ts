@@ -6,3 +6,9 @@ export default class HttpError extends Error {
     this.status = status;
   }
 }
+
+export class VisibilityError extends HttpError {
+  constructor(message: string) {
+    super(403, message);
+  }
+}
