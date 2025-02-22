@@ -1,3 +1,4 @@
+import { Role } from "@seitz/shared";
 import axios from "axios";
 
 const axiosInstance = axios.create({
@@ -68,8 +69,8 @@ async function getAllUsers() {
   return result.data;
 }
 
-async function addUserAsAdmin(userId: string) {
-  return await axiosInstance.post(`admin/users/${userId}`);
+async function assignAdminRole(userId: string, role: Role) {
+  return await axiosInstance.post(`admin/users/${userId}`, { role });
 }
 
 async function removeUserAsAdmin(userId: string) {
@@ -80,6 +81,6 @@ export default {
   getStages,
   getAdminUsers,
   getAllUsers,
-  addUserAsAdmin,
+  assignAdminRole,
   removeUserAsAdmin,
 };

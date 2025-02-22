@@ -142,3 +142,5 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+vite.config.ts.timestamp-*.mjs
