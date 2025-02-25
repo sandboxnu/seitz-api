@@ -1,4 +1,4 @@
-import { VisibilityError } from "@/types/errors";
+import { VisibilityError } from "../types/errors";
 
 export enum Visibility {
   ON = "on",

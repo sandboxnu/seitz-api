@@ -3,23 +3,42 @@ import { User, Battery, CustomizedBattery } from "../models";
 import HttpError from "../types/errors";
 import { APIResponse } from "../util/handlers";
 import * as crypto from "crypto";
-import type {
-  CreateBattery,
-  CreateBatteryStage,
-  CreateOption,
-  IBattery,
-  ICustomizedBattery,
-  IUser,
+import {
+  Role,
+  type CreateBattery,
+  type CreateBatteryStage,
+  type CreateOption,
+  type IBattery,
+  type ICustomizedBattery,
+  type IUser,
 } from "@seitz/shared";
-import { parseVisibility } from "@/util/validation.utils";
+import { parseVisibility } from "../util/validation.utils";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-export const promoteToAdmin = async (userId: string): APIResponse<void> => {
-  const user = await User.findOneAndUpdate({ _id: userId }, { isAdmin: true });
+export const updateRole = async (
+  userId: string,
+  role: Role
+): APIResponse<void> => {
+  if (!Object.values(Role).includes(role)) {
+    throw new HttpError(400, "Invalid role");
+  }
+
+  let user = await User.findById(userId);
   if (!user) {
     throw new HttpError(404);
   }
+
+  // TODO this needa be figured out lol
+  // if (user.role === Role.SuperAdmin && role !== Role.SuperAdmin) {
+  //   throw new HttpError(403); // Super Admins can't be assigned a lesser role
+  // }
+
+  user = await User.findOneAndUpdate({ _id: userId }, { role: role });
+  if (!user) {
+    throw new HttpError(404);
+  }
+
   return [200];
 };
 
@@ -77,12 +96,12 @@ export const deleteBattery = async (batteryId: string): APIResponse<void> => {
 };
 
 export const getAdminUsers = async (): APIResponse<IUser[]> => {
-  const adminUsers = await User.find({ isAdmin: true });
+  const adminUsers = await User.find({ role: { $ne: Role.BasicUser } });
   return [200, adminUsers];
 };
 
 export const removeUserAsAdmin = async (userId: string): APIResponse<void> => {
-  const user = await User.updateOne({ _id: userId }, { isAdmin: false });
+  const user = await User.updateOne({ _id: userId }, { role: Role.BasicUser });
   if (!user) {
     throw new HttpError(404);
   }

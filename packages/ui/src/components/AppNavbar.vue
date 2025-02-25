@@ -2,6 +2,7 @@
 import { computed, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
+import { Role } from "@seitz/shared";
 
 const route = useRoute();
 const router = useRouter();
@@ -56,13 +57,23 @@ const isCollapsed = computed(() => {
         <ElImage src="/icons/person.svg" />
         <template v-if="!isCollapsed">Profile</template>
       </ElMenuItem>
-      <template v-if="authStore.currentUser.isAdmin">
+      <template
+        v-if="authStore.hasAdminPower(Role.StudyManager, Role.UserManager)"
+      >
         <ElImage src="/icons/horiz-line.svg" class="mx-6 my-9" />
-        <ElMenuItem index="/admin" class="flex items-center gap-3">
+        <ElMenuItem
+          v-if="authStore.hasAdminPower(Role.StudyManager)"
+          index="/admin"
+          class="flex items-center gap-3"
+        >
           <ElImage src="/icons/pencil.svg" />
           <template v-if="!isCollapsed">Task Templates</template>
         </ElMenuItem>
-        <ElMenuItem index="/admin/users" class="flex items-center gap-3">
+        <ElMenuItem
+          v-if="authStore.hasAdminPower(Role.UserManager)"
+          index="/admin/users"
+          class="flex items-center gap-3"
+        >
           <ElImage src="/icons/people.svg" />
           <template v-if="!isCollapsed">Users</template>
         </ElMenuItem>
